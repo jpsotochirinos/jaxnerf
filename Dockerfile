@@ -37,4 +37,17 @@ ENV MODELS_BUCKET='gs://nerf-bucket/models'
 
 ENV CHECKPOINT_BUCKET='gs://nerf-bucket/chekpoint'
 
+RUN cd jaxnerf
+
+WORKDIR /jaxnerf
+
+RUN git fetch
+
+RUN cd ..
+
+WORKDIR /
+
+EXPOSE 3000
+
+
 CMD [ "python","-m", "jaxnerf.app" ]
