@@ -41,7 +41,7 @@ RUN cd jaxnerf
 
 WORKDIR /jaxnerf
 
-RUN git fetch
+RUN git pull
 
 RUN cd ..
 
