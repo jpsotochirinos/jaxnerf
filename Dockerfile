@@ -29,7 +29,7 @@ ENV PATH /opt/conda/envs/env/bin:$PATH
 
 RUN conda install pip; pip install --upgrade pip setuptools wheel
 
-RUN pip install -r spe3d/requirements.txt
+RUN pip install -r jaxnerf/requirements.txt
 
 RUN pip install "jax[tpu]>=0.2.16" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 
@@ -37,4 +37,4 @@ ENV MODELS_BUCKET='gs://nerf-bucket/models'
 
 ENV CHECKPOINT_BUCKET='gs://nerf-bucket/chekpoint'
 
-CMD [ "python","-m", "spe3d.app" ]
+CMD [ "python","-m", "jaxnerf.app" ]
