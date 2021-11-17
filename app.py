@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 
 MODELS_PATH = 'gs://nerf-bucket/models'
 CHECKPNT_PATH = 'gs://nerf-bucket/chekpoint'
-CONFIG_PATH = 'config/'
+CONFIG_PATH = 'gs://nerf-bucket/configs'
 
 app = Flask(__name__)
 
