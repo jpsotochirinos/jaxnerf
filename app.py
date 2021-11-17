@@ -8,7 +8,7 @@ CONFIG_PATH = 'config/'
 app = Flask(__name__)
 
 @app.route('/test/',methods=['POST'])
-async def basic_train():
+async def train_model():
     new_flags={
         "data_dir": MODELS_PATH + request.json['data_dir'],
         "train_dir": CHECKPNT_PATH + request.json['train_dir'],
@@ -25,8 +25,10 @@ async def basic_train():
         #get last step
     return  jsonify({"status":"200",
                      "message": "succes"})
+
+
 @app.route('/train/',methods=['POST'])
-async def train_model():
+async def basic_train():
     new_flags={
         "data_dir": MODELS_PATH + request.json['data_dir'],
         "train_dir": CHECKPNT_PATH + request.json['train_dir'],
