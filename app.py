@@ -26,7 +26,7 @@ async def basic_train():
     return  jsonify({"status":"200",
                      "message": "succes"})
 @app.route('/train/',methods=['POST'])
-async def basic_train():
+async def train_model():
     new_flags={
         "data_dir": MODELS_PATH + request.json['data_dir'],
         "train_dir": CHECKPNT_PATH + request.json['train_dir'],

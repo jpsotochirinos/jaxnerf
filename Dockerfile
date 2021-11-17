@@ -1,31 +1,30 @@
-FROM tensorflow/tensorflow:2.7.0
-
-ENV PATH="/root/miniconda3/bin:${PATH}"
-ARG PATH="/root/miniconda3/bin:${PATH}"
+FROM gcr.io/deeplearning-platform-release/tf2-cpu.2-7
 
 RUN apt-get update -y
 
-RUN apt-get install -y wget git python3.7 python-dev bzip2 libgl1-mesa-glx libxml2-dev && rm -rf /var/lib/apt/lists/*
+RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add 
 
-RUN wget \
-    https://repo.anaconda.com/miniconda/Miniconda3-py39_4.10.3-Linux-x86_64.sh \
-    && mkdir /root/.conda \
-    && bash Miniconda3-py39_4.10.3-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-py39_4.10.3-Linux-x86_64.sh 
+RUN apt-get update -y
 
-RUN conda --version
+ENV DEBIAN_FRONTEND noninteractive
 
-RUN conda create --name jaxnerf python=3.7
+RUN apt-get update -y
 
-RUN echo "source activate jaxnerf" > ~/.bashrc
+RUN apt install libgl1-mesa-glx -y
 
-ENV PATH /opt/conda/envs/env/bin:$PATH
+RUN apt-get install 'ffmpeg'\
+    'libsm6'\
+    'libxext6'  -y
 
-RUN conda install pip; pip install --upgrade pip setuptools wheel
+RUN apt-get install -y wget git python3.7 python-dev && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade pip setuptools wheel
 
 RUN pip install skia-python
 
 RUN git clone https://github.com/LordCocoro/jaxnerf.git
+
+RUN pip install --upgrade pip setuptools wheel
 
 RUN pip install -r jaxnerf/requirements.txt
 
