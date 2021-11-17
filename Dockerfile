@@ -1,13 +1,11 @@
-FROM tensorflow/tensorflow:2.6.0
+FROM tensorflow/tensorflow:2.7.0
 
 ENV PATH="/root/miniconda3/bin:${PATH}"
 ARG PATH="/root/miniconda3/bin:${PATH}"
 
 RUN apt-get update -y
 
-RUN apt-get install -y wget git python python-dev && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get install bzip2
+RUN apt-get install -y wget git python3.7 python-dev bzip2 libgl1-mesa-glx libxml2-dev && rm -rf /var/lib/apt/lists/*
 
 RUN wget \
     https://repo.anaconda.com/miniconda/Miniconda3-py39_4.10.3-Linux-x86_64.sh \
@@ -17,10 +15,6 @@ RUN wget \
 
 RUN conda --version
 
-RUN pip install skia-python
-
-RUN git clone https://github.com/LordCocoro/jaxnerf.git
-
 RUN conda create --name jaxnerf python=3.7
 
 RUN echo "source activate jaxnerf" > ~/.bashrc
@@ -28,6 +22,10 @@ RUN echo "source activate jaxnerf" > ~/.bashrc
 ENV PATH /opt/conda/envs/env/bin:$PATH
 
 RUN conda install pip; pip install --upgrade pip setuptools wheel
+
+RUN pip install skia-python
+
+RUN git clone https://github.com/LordCocoro/jaxnerf.git
 
 RUN pip install -r jaxnerf/requirements.txt
 
@@ -50,6 +48,5 @@ RUN cd ..
 WORKDIR /
 
 EXPOSE 3000
-
 
 CMD [ "python","-m", "jaxnerf.app" ]
