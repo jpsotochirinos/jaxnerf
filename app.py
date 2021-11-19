@@ -6,7 +6,7 @@ MODELS_PATH = '/mnt/nerf/models/'
 CHECKPNT_PATH = '/mnt/nerf/checkpoints/'
 CONFIG_PATH = '/mnt/nerf/configs/'
 
-path = os.listdir('/mnt/nerf') ## /mnt/nerf
+##path = os.listdir('/mnt/nerf') ## /mnt/nerf
 
 app = Flask(__name__)
 
