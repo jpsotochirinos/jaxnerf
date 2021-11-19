@@ -46,11 +46,10 @@ FLAGS = flags.FLAGS
 
 # TODO(phawkins): Remove jax_xla_backend.
 flags.DEFINE_string(
-    'jax_xla_backend', 
-    os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS', '').lower(), #get env KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS
+    'jax_xla_backend', 'tpu_driver', #get env KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS
     'Deprecated, please use --jax_platforms instead.')
 flags.DEFINE_string(
-    'jax_backend_target', '',
+    'jax_backend_target', os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS', '').lower(),
     'Either "local" or "rpc:address" to connect to a remote service target.')
 # TODO(skye): warn when this is used once we test out --jax_platforms a bit
 flags.DEFINE_string(
