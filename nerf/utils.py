@@ -179,7 +179,7 @@ def define_flags():
 
 def update_flags(args):
   """Update the flags in `args` with the contents of the config YAML file."""
-  pth = path.join(BASE_DIR, args.config + ".yaml")
+  pth = path.join(args.config + ".yaml")
   with open_file(pth, "r") as fin:
     configs = yaml.load(fin, Loader=yaml.FullLoader)
   # Only allow args to be updated if they already exist.
