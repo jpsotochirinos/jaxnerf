@@ -27,8 +27,7 @@ async def train_model():
         #cambiar el estado a error
         #get last step
     return  jsonify({"status":"200",
-                     "message": "succes",
-                     "path":path})
+                     "message": "succes"})
 
 
 @app.route('/train/',methods=['POST'])
