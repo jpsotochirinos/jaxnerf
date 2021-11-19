@@ -41,14 +41,17 @@ async def basic_train():
     try:
        print(new_flags)
        await train.run_train(new_flags)
+       return  jsonify({"status":"200",
+                     "message": "succes"})
        #cambiar el estado del proceso de pending o progress bar a terminado
        print("finish")
     except ValueError:
         print(ValueError)
+        return  jsonify({"status":"500",
+                     "message": "erro"})
         #cambiar el estado a error
         #get last step
-    return  jsonify({"status":"200",
-                     "message": "succes"})
+    
 
 if __name__ == '__main__':
     app.run(host = '0.0.0.0',port= 3000)
