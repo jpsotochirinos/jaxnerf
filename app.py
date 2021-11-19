@@ -3,7 +3,7 @@ import os
 from flask import Flask, jsonify, request
 
 MODELS_PATH = '/mnt/nerf/models/'
-CHECKPNT_PATH = '/mnt/nerf/chekpoints/'
+CHECKPNT_PATH = '/mnt/nerf/checkpoints/'
 CONFIG_PATH = '/mnt/nerf/configs/'
 
 path = os.listdir('/mnt/nerf') ## /mnt/nerf
