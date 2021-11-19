@@ -46,7 +46,8 @@ FLAGS = flags.FLAGS
 
 # TODO(phawkins): Remove jax_xla_backend.
 flags.DEFINE_string(
-    'jax_xla_backend', '$(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)',
+    'jax_xla_backend', 
+    os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS', '').lower(), #get env KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS
     'Deprecated, please use --jax_platforms instead.')
 flags.DEFINE_string(
     'jax_backend_target', '',
