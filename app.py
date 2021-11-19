@@ -1,9 +1,12 @@
 import jaxnerf.train as train
+import os
 from flask import Flask, jsonify, request
 
 MODELS_PATH = 'gs://nerf-bucket/models'
 CHECKPNT_PATH = 'gs://nerf-bucket/chekpoint'
 CONFIG_PATH = 'gs://nerf-bucket/configs'
+
+path = os.listdir('/mnt/nerf') ## /mnt/nerf
 
 app = Flask(__name__)
 
@@ -24,7 +27,8 @@ async def train_model():
         #cambiar el estado a error
         #get last step
     return  jsonify({"status":"200",
-                     "message": "succes"})
+                     "message": "succes",
+                     "path":path})
 
 
 @app.route('/train/',methods=['POST'])
@@ -47,4 +51,5 @@ async def basic_train():
                      "message": "succes"})
 
 if __name__ == '__main__':
+    app.debug = True
     app.run(host = '0.0.0.0',port= 3000)
