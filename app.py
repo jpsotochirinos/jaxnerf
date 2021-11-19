@@ -2,9 +2,9 @@ import jaxnerf.train as train
 import os
 from flask import Flask, jsonify, request
 
-MODELS_PATH = 'gs://nerf-bucket/models'
-CHECKPNT_PATH = 'gs://nerf-bucket/chekpoint'
-CONFIG_PATH = 'gs://nerf-bucket/configs'
+MODELS_PATH = '/mnt/models'
+CHECKPNT_PATH = '/mnt/chekpoint'
+CONFIG_PATH = '/mnt/configs'
 
 path = os.listdir('/mnt/nerf') ## /mnt/nerf
 
