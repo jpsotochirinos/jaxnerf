@@ -127,6 +127,7 @@ def train_step(model, rng, state, batch, lr):
   return new_state, stats, rng
 
 def main(unused_argv):
+  init_tpu()
   rng = random.PRNGKey(20200823)
   # Shift the numpy random seed by host_id() to shuffle data loaded by different
   # hosts.
