@@ -38,6 +38,7 @@ spec:
           gcsfuse nerf-models /mnt/nerf &&
           git -C /jaxnerf pull &&
           cp -f /jaxnerf/xla_bridge.py /usr/local/lib/python3.8/dist-packages/jax/_src/lib/ &&
+          bash /jaxnerf/init_tpu.sh &&
           python -m jaxnerf.app
         resources:
           limits:
