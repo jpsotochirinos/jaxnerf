@@ -1,4 +1,4 @@
-FROM gcr.io/deeplearning-platform-release/tf2-cpu.2-7
+FROM tensorflow/tensorflow:2.7.0
 
 RUN apt-get update -y
 
@@ -14,9 +14,22 @@ RUN apt install libgl1-mesa-glx -y
 
 RUN apt-get install 'ffmpeg'\
     'libsm6'\
-    'libxext6'  -y
+    'libxext6'  -y 
 
-RUN apt-get install -y wget git python3.7 python-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y wget git python3.7
+
+ENV GCSFUSE_REPO gcsfuse-stretch
+
+RUN apt-get update && apt-get install --yes --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg \
+  && echo "deb http://packages.cloud.google.com/apt $GCSFUSE_REPO main" \
+    | tee /etc/apt/sources.list.d/gcsfuse.list \
+  && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+  && apt-get update \
+  && apt-get install --yes gcsfuse \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 
 RUN pip install --upgrade pip setuptools wheel
 
@@ -38,9 +51,9 @@ RUN cd jaxnerf
 
 WORKDIR /jaxnerf
 
-RUN git fetch
-
 RUN git pull
+
+RUN git fetch
 
 RUN cd ..
 

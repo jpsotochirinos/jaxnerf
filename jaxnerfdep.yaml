@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nerf-deployment
+  labels:
+    app: nerf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nerf
+  template:
+    metadata:
+      name: nerf-pods
+      annotations:
+        tf-version.cloud-tpus.google.com: "2.7.0"
+      labels:
+        app: nerf
+    spec:
+      containers:
+      - name: nerf
+        image: gcr.io/spe3d-331118/flaskjaxnerf
+        securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+        lifecycle:
+          preStop:
+            exec:
+              command: ["fusermount", "-u", "/mnt/nerf"]
+        command: ["/bin/sh", "-c"]
+        args: 
+        - >
+          ls &&
+          mkdir /mnt/nerf &&
+          export JAX_PLATFORMS=tpu &&
+          gcsfuse nerf-models /mnt/nerf &&
+          git -C /jaxnerf pull &&
+          cp -f /jaxnerf/xla_bridge.py /usr/local/lib/python3.8/dist-packages/jax/_src/lib/ &&
+          python -m jaxnerf.app
+        resources:
+          limits:
+            cloud-tpus.google.com/v2: 8
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nerf
+spec:
+  type: LoadBalancer
+  selector:
+    app: nerf
+  ports:
+  - name: nerf
+    port: 3000
+    targetPort: 3000
