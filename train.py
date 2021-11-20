@@ -29,16 +29,25 @@ from jax import config
 from jax import random
 import jax.numpy as jnp
 import numpy as np
-
+import os
+import requests
 from jaxnerf.nerf import datasets
 from jaxnerf.nerf import models
 from jaxnerf.nerf import utils
+
+
+path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+path = path.split(':')
+url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
+reqq = requests.post(url)
+TPU_DRIVER_MODE = 1
+config.FLAGS.jax_xla_backend = "tpu_driver"
+config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
 
 FLAGS = flags.FLAGS
 
 utils.define_flags()
 config.parse_flags_with_absl()
-
 
 def train_step(model, rng, state, batch, lr):
   """One optimization step.
