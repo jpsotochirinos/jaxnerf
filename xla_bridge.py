@@ -46,7 +46,7 @@ FLAGS = flags.FLAGS
 
 # TODO(phawkins): Remove jax_xla_backend.
 flags.DEFINE_string(
-    'jax_xla_backend', 'tpu_driver', #get env KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS
+    'jax_xla_backend', '', #get env KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS
     'Deprecated, please use --jax_platforms instead.')
 flags.DEFINE_string(
     'jax_backend_target', os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS', '').lower(),
@@ -58,7 +58,7 @@ flags.DEFINE_string(
     'Deprecated, please use --jax_platforms instead.')
 flags.DEFINE_string(
     'jax_platforms',
-    os.getenv('JAX_PLATFORMS', 'tpu').lower(),
+    os.getenv('JAX_PLATFORMS', '').lower(),
     'Comma-separated list of platform names specifying which platforms jax '
     'should attempt to initialize. The first platform in the list that is '
     'successfully initialized will be used as the default platform. For '
