@@ -58,7 +58,7 @@ flags.DEFINE_string(
     'Deprecated, please use --jax_platforms instead.')
 flags.DEFINE_string(
     'jax_platforms',
-    os.getenv('JAX_PLATFORMS', '').lower(),
+    os.getenv('JAX_PLATFORMS', 'tpu').lower(),
     'Comma-separated list of platform names specifying which platforms jax '
     'should attempt to initialize. The first platform in the list that is '
     'successfully initialized will be used as the default platform. For '
