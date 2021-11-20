@@ -54,6 +54,10 @@ utils.define_flags()
 config.parse_flags_with_absl()
 
 def train_step(model, rng, state, batch, lr):
+  global TPU_DRIVER_MODE
+  TPU_DRIVER_MODE = 1
+  config.FLAGS.jax_xla_backend = "tpu_driver"
+  config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
   """One optimization step.
 
   Args:
@@ -127,6 +131,11 @@ def train_step(model, rng, state, batch, lr):
 
 
 def run_train(flg):
+  global TPU_DRIVER_MODE
+  TPU_DRIVER_MODE = 1
+  config.FLAGS.jax_xla_backend = "tpu_driver"
+  config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+
   rng = random.PRNGKey(20200823)
   # Shift the numpy random seed by host_id() to shuffle data loaded by different
   # hosts.
