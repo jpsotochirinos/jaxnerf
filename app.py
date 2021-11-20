@@ -1,4 +1,4 @@
-import jaxnerf.train as train
+#import jaxnerf.train as train
 from flask import Flask, jsonify, request
 
 MODELS_PATH = '/mnt/nerf/models/'
@@ -40,7 +40,7 @@ async def basic_train():
     }
     try:
        print(new_flags)
-       await train.run_train(new_flags)
+       #await train.run_train(new_flags)
        return  jsonify({"status":"200",
                      "message": "succes"})
        #cambiar el estado del proceso de pending o progress bar a terminado
