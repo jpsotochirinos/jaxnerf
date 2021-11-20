@@ -24,7 +24,7 @@ async def train_model():
 
     try:
        print(new_flags)
-       reqq = await requests.post('http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly')
+       reqq = requests.post('http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly')
        #await train.run_train(new_flags)
        #cambiar el estado del proceso de pending o progress bar a terminado
        print("finish")
