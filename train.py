@@ -43,6 +43,7 @@ FLAGS = flags.FLAGS
 
 utils.define_flags()
 config.parse_flags_with_absl()
+
 def init_tpu():
   global TPU_DRIVER_MODE
   path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
@@ -125,15 +126,11 @@ def train_step(model, rng, state, batch, lr):
   new_state = state.replace(optimizer=new_optimizer)
   return new_state, stats, rng
 
-
-def run_train(flg):
+def main(unused_argv):
   rng = random.PRNGKey(20200823)
   # Shift the numpy random seed by host_id() to shuffle data loaded by different
   # hosts.
   np.random.seed(20201473 + jax.host_id())
-  FLAGS.train_dir = flg['train_dir']
-  FLAGS.data_dir = flg['data_dir']
-  FLAGS.config = flg['config']
 
   if FLAGS.config is not None:
     utils.update_flags(FLAGS)
@@ -282,4 +279,5 @@ def run_train(flg):
     checkpoints.save_checkpoint(
         FLAGS.train_dir, state, int(FLAGS.max_steps), keep=100)
 
-
+if __name__ == "__main__":
+  app.run(main)
