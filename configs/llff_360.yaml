@@ -8,7 +8,7 @@ batch_size: 4096
 randomized: true
 near: 0.2
 far: 100.
-factor: 1
+factor: 0
 llffhold: 8
 noise_std: 1.
 spherify: True
