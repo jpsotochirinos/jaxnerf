@@ -16,7 +16,6 @@ app = Flask(__name__)
 async def train_model():
     path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
     path = path.split(':')
-    requests.post('http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly')
     new_flags={
         "data_dir": MODELS_PATH + request.json['data_dir'],
         "train_dir": CHECKPNT_PATH + request.json['train_dir'],
@@ -25,6 +24,7 @@ async def train_model():
 
     try:
        print(new_flags)
+       reqq = await requests.post('http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly')
        #await train.run_train(new_flags)
        #cambiar el estado del proceso de pending o progress bar a terminado
        print("finish")
@@ -34,6 +34,7 @@ async def train_model():
         #get last step
     return  jsonify({"status":"200",
                      "message": "succes",
+                     "requests": reqq,
                      "jax_her":jax.devices()})
 
 
