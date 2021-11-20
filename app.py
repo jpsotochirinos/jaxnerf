@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 MODELS_PATH = '/mnt/nerf/models/'
 CHECKPNT_PATH = '/mnt/nerf/checkpoints/'
 CONFIG_PATH = '/mnt/nerf/configs/'
-
+TPU_DRIVER_MODE = 1
 ##path = os.listdir('/mnt/nerf') ## /mnt/nerf
 
 app = Flask(__name__)
