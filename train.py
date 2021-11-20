@@ -26,9 +26,7 @@ reqq = requests.post(url)
 TPU_DRIVER_MODE = 1
 config.FLAGS.jax_xla_backend = "tpu_driver"
 config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-import jax
 
-print(jax.devices())
 
 import functools
 import gc
@@ -38,6 +36,7 @@ from absl import flags
 import flax
 from flax.metrics import tensorboard
 from flax.training import checkpoints
+import jax
 
 from jax import random
 import jax.numpy as jnp
@@ -46,6 +45,8 @@ import numpy as np
 from jaxnerf.nerf import datasets
 from jaxnerf.nerf import models
 from jaxnerf.nerf import utils
+
+
 
 FLAGS = flags.FLAGS
 
