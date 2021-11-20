@@ -1,4 +1,5 @@
 import jaxnerf.train as train
+import jax
 import os
 import requests
 from flask import Flask, jsonify, request
@@ -32,7 +33,8 @@ async def train_model():
         #cambiar el estado a error
         #get last step
     return  jsonify({"status":"200",
-                     "message": "succes"})
+                     "message": "succes",
+                     "jax_her":jax.devices()})
 
 
 @app.route('/train/',methods=['POST'])
