@@ -179,7 +179,7 @@ def main(unused_argv):
 
   # Compiling to the CPU because it's faster and more accurate.
   ssim_fn = jax.jit(
-      functools.partial(utils.compute_ssim, max_val=1.), backend="cpu")
+      functools.partial(utils.compute_ssim, max_val=1.))
 
   if not utils.isdir(FLAGS.train_dir):
     utils.makedirs(FLAGS.train_dir)
