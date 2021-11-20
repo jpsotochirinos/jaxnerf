@@ -15,7 +15,7 @@ app = Flask(__name__)
 async def train_model():
     path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
     path = path.split(':')
-    requests.post('http://'+path[1][1:]+':8475/requestversion/tpu_driver_nightly')
+    requests.post('http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly')
     new_flags={
         "data_dir": MODELS_PATH + request.json['data_dir'],
         "train_dir": CHECKPNT_PATH + request.json['train_dir'],
