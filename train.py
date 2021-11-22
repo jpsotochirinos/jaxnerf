@@ -19,11 +19,11 @@ import os
 import requests
 from jax import config
 
-path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-path = path.split(':')
-url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
-reqq = requests.post(url)
-print(reqq)
+# path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+# path = path.split(':')
+# url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
+# reqq = requests.post(url)
+# print(reqq)
 import jax.tools.colab_tpu
 jax.tools.colab_tpu.setup_tpu()
 
