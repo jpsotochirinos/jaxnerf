@@ -231,11 +231,11 @@ def main(unused_argv):
         summary_writer.scalar("train_rays_per_sec", rays_per_sec, step)
         precision = int(np.ceil(np.log10(FLAGS.max_steps))) + 1
         print(step)
-        # print(("{:" + "{:d}".format(precision) + "d}").format(step) +
-        #       f"/{FLAGS.max_steps:d}: " + f"i_loss={stats.loss[0]:0.4f}, " +
-        #       f"avg_loss={avg_loss:0.4f}, " +
-        #       f"weight_l2={stats.weight_l2[0]:0.2e}, " + f"lr={lr:0.2e}, " +
-        #       f"{rays_per_sec:0.0f} rays/sec")
+        print(("{:" + "{:d}".format(precision) + "d}").format(step) +
+              f"/{FLAGS.max_steps:d}: " + f"i_loss={stats.loss[0]:0.4f}, " +
+              f"avg_loss={avg_loss:0.4f}, " +
+              f"weight_l2={stats.weight_l2[0]:0.2e}, " + f"lr={lr:0.2e}, " +
+              f"{rays_per_sec:0.0f} rays/sec")
       if step % FLAGS.save_every == 0:
         state_to_save = jax.device_get(jax.tree_map(lambda x: x[0], state))
         checkpoints.save_checkpoint(
