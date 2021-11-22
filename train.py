@@ -15,15 +15,7 @@
 
 # Lint as: python3
 """Training script for Nerf."""
-import os
-import requests
-from jax import config
 
-# path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-# path = path.split(':')
-# url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
-# reqq = requests.post(url)
-# print(reqq)
 import jax.tools.colab_tpu
 jax.tools.colab_tpu.setup_tpu()
 
@@ -36,7 +28,7 @@ import flax
 from flax.metrics import tensorboard
 from flax.training import checkpoints
 import jax
-
+from jax import config
 from jax import random
 import jax.numpy as jnp
 import numpy as np
@@ -44,8 +36,6 @@ import numpy as np
 from jaxnerf.nerf import datasets
 from jaxnerf.nerf import models
 from jaxnerf.nerf import utils
-
-TPU_DRIVER_MODE = 0
 
 FLAGS = flags.FLAGS
 
@@ -55,14 +45,12 @@ config.parse_flags_with_absl()
 
 def train_step(model, rng, state, batch, lr):
   """One optimization step.
-
   Args:
     model: The linen model.
     rng: jnp.ndarray, random number generator.
     state: utils.TrainState, state of the model/optimizer.
     batch: dict, a mini-batch of data for training.
     lr: float, real-time learning rate.
-
   Returns:
     new_state: utils.TrainState, new training state.
     stats: list. [(loss, psnr), (loss_coarse, psnr_coarse)].
@@ -125,8 +113,8 @@ def train_step(model, rng, state, batch, lr):
   new_state = state.replace(optimizer=new_optimizer)
   return new_state, stats, rng
 
-def main(unused_argv):
 
+def main(unused_argv):
   rng = random.PRNGKey(20200823)
   # Shift the numpy random seed by host_id() to shuffle data loaded by different
   # hosts.
@@ -177,7 +165,7 @@ def main(unused_argv):
 
   # Compiling to the CPU because it's faster and more accurate.
   ssim_fn = jax.jit(
-      functools.partial(utils.compute_ssim, max_val=1.))
+      functools.partial(utils.compute_ssim, max_val=1.), backend="cpu")
 
   if not utils.isdir(FLAGS.train_dir):
     utils.makedirs(FLAGS.train_dir)
@@ -230,7 +218,6 @@ def main(unused_argv):
         summary_writer.scalar("train_steps_per_sec", steps_per_sec, step)
         summary_writer.scalar("train_rays_per_sec", rays_per_sec, step)
         precision = int(np.ceil(np.log10(FLAGS.max_steps))) + 1
-        print(step)
         print(("{:" + "{:d}".format(precision) + "d}").format(step) +
               f"/{FLAGS.max_steps:d}: " + f"i_loss={stats.loss[0]:0.4f}, " +
               f"avg_loss={avg_loss:0.4f}, " +
@@ -278,6 +265,7 @@ def main(unused_argv):
     state = jax.device_get(jax.tree_map(lambda x: x[0], state))
     checkpoints.save_checkpoint(
         FLAGS.train_dir, state, int(FLAGS.max_steps), keep=100)
+
 
 if __name__ == "__main__":
   app.run(main)
