@@ -26,3 +26,6 @@ python -m jaxnerf.train \
   --max_steps=5 \
   --factor=2 \
   --batch_size=512
+import jax
+    import jax.tools.colab_tpu
+    jax.tools.colab_tpu.setup_tpu()
