@@ -188,10 +188,6 @@ async def status():
         })
                     
     else:
-        db.session.commit()
-        h = Model.query.all()
-        h[len(h)-1].rg_status = 'stopped'
-        db.session.commit()
         return jsonify({
             "status":404,
             "message":"no found process"
