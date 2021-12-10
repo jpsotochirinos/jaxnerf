@@ -16,20 +16,6 @@
 # Lint as: python3
 """Training script for Nerf."""
 
-import os
-import requests
-from jax import config
-
-path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-path = path.split(':')
-url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
-reqq = requests.post(url)
-print(reqq)
-TPU_DRIVER_MODE = 1
-config.FLAGS.jax_xla_backend = "tpu_driver"
-config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-
-
 import functools
 import gc
 import time
@@ -47,6 +33,7 @@ import numpy as np
 from jaxnerf.nerf import datasets
 from jaxnerf.nerf import models
 from jaxnerf.nerf import utils
+from jaxnerf.db.db import Model,Train, db
 
 FLAGS = flags.FLAGS
 
@@ -56,12 +43,14 @@ config.parse_flags_with_absl()
 
 def train_step(model, rng, state, batch, lr):
   """One optimization step.
+
   Args:
     model: The linen model.
     rng: jnp.ndarray, random number generator.
     state: utils.TrainState, state of the model/optimizer.
     batch: dict, a mini-batch of data for training.
     lr: float, real-time learning rate.
+
   Returns:
     new_state: utils.TrainState, new training state.
     stats: list. [(loss, psnr), (loss_coarse, psnr_coarse)].
@@ -129,8 +118,9 @@ def main(unused_argv):
   rng = random.PRNGKey(20200823)
   # Shift the numpy random seed by host_id() to shuffle data loaded by different
   # hosts.
+  model_name = FLAGS.train_dir.split('/')[-1]
   np.random.seed(20201473 + jax.host_id())
-
+  
   if FLAGS.config is not None:
     utils.update_flags(FLAGS)
   if FLAGS.batch_size % jax.device_count() != 0:
@@ -259,14 +249,14 @@ def main(unused_argv):
       if jax.host_id() == 0:
         psnr = utils.compute_psnr(
             ((pred_color - test_case["pixels"])**2).mean())
-        #ssim = ssim_fn(pred_color, test_case["pixels"])
+        ssim = ssim_fn(pred_color, test_case["pixels"])
         eval_time = time.time() - t_eval_start
         num_rays = jnp.prod(jnp.array(test_case["rays"].directions.shape[:-1]))
         rays_per_sec = num_rays / eval_time
         summary_writer.scalar("test_rays_per_sec", rays_per_sec, step)
         print(f"Eval {step}: {eval_time:0.3f}s., {rays_per_sec:0.0f} rays/sec")
         summary_writer.scalar("test_psnr", psnr, step)
-        #summary_writer.scalar("test_ssim", ssim, step)
+        summary_writer.scalar("test_ssim", ssim, step)
         summary_writer.image("test_pred_color", pred_color, step)
         summary_writer.image("test_pred_disp", pred_disp, step)
         summary_writer.image("test_pred_acc", pred_acc, step)

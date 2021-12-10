@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright 2021 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-set -e
-set -x
-
-virtualenv -p python3 .
-source ./bin/activate
-
-pip install -r jaxnerf/requirements.txt
-python -m jaxnerf.train \
-  --data_dir=jaxnerf/example_data \
-  --train_dir=/tmp/jaxnerf_test \
-  --max_steps=5 \
-  --factor=2 \
-  --batch_size=512
