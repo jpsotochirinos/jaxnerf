@@ -111,7 +111,7 @@ async def basic_train():
         #cambiar el estado a error
         #get last step
 @app.route('/',methods=['POST'])
-async def basic_train():
+async def pross():
     model = request.json['process']
     try:
         print(model)
