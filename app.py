@@ -110,6 +110,19 @@ async def basic_train():
                      "message": "erro"})
         #cambiar el estado a error
         #get last step
+@app.route('/',methods=['POST'])
+async def basic_train():
+    model = request.json['process']
+    try:
+        print(model)
+        #comando en segundo plano
+        subprocess.Popen(["python","-m", "jaxnerf.ia" ])
+        return  jsonify({"status":"200",
+                        "message": "succes"})
+    except ValueError:
+        print(ValueError)
+        return  jsonify({"status":"500",
+                     "message": "erro"})
 
 @app.route('/model/',methods=['POST'])
 def model_status():
