@@ -174,6 +174,7 @@ async def status():
             process_status = elem.status()
             process_create_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(elem.create_time()))
             if(process_status=="running"):
+                print('here')
                 process.append ({
                     "pid": str(process_pid),
                     "name": process_name,
