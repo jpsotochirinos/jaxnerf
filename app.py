@@ -175,12 +175,12 @@ async def status():
             process_create_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(elem.create_time()))
             if(process_status=="running"):
                 print('here')
-                process.append ({
-                    "pid": str(process_pid),
-                    "name": process_name,
-                    "status": process_status,
-                    "create_time":process_create_time
-                })
+            process.append ({
+                "pid": str(process_pid),
+                "name": process_name,
+                "status": process_status,
+                "create_time":process_create_time
+            })
 
         return jsonify({
             "process":process,
