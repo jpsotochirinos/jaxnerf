@@ -3,9 +3,11 @@ import psutil
 import subprocess
 import time
 import os
+from os import path
 import numpy as np
 from jaxnerf.nd.dataset import *
 from jaxnerf.db.db import Model,db
+from jaxnerf.nerf import utils
 
 def checkIfProcessRunning(processName):
     for proc in psutil.process_iter():
@@ -30,15 +32,19 @@ def checkModelFile(model,only):
     check_sparce_0_files = False
     check_images_folder = os.path.exists(DATA_DIR+model+'/images/')
     check_images_files = False
+    with utils.open_file(path.join(DATA_DIR+model, "poses_bounds.npy"),"rb") as fp:
+      poses_arr = np.load(fp)
+    poses = poses_arr[:, :-2].reshape([-1, 3, 5]).transpose([1, 2, 0])
+
     if(check_sparce_0_folder):
         bin_arr = ['cameras.bin','images.bin','points3D.bin','project.ini']
         sparce_bin_files = os.listdir(DATA_DIR+model+'/sparse/0/')
         check_sparce_0_files = (len(sparce_bin_files)==len(bin_arr))
     
     if(check_images_folder and check_sparce_0_files):
-        images_arr = np.loadtxt(DATA_DIR+model+'/images.dat', dtype=str)
+        images_arr = poses.shape[-1]
         images_files = os.listdir(DATA_DIR+model+'/images/')
-        check_images_files = (len(images_arr) == len(images_files)) 
+        check_images_files = (images_arr == len(images_files)) 
     check_arr = [
         str(int(check_folder)),
         str(int(check_database)),
@@ -92,3 +98,67 @@ def check_models(model):
     if r!=0:
         return False
     return True
+def check_img_size(model):
+    list_img = DATA_DIR+model+'/images/'
+    images_files = os.listdir(list_img)
+    avg_size = 0
+    for img in images_files:
+        size = os.path.getsize(list_img+img)/1024.0**2
+        avg_size += size / len(images_files)
+    if(np.floor(avg_size/2.7) == 1 or np.floor(avg_size/2.7) ==0):
+        return 0
+    else:
+        return np.floor(avg_size/2.7)
+
+def minify(model, factors=[], resolutions=[]):
+    basedir = DATA_DIR + model + '/'
+    needtoload = False
+    for r in factors:
+        imgdir = os.path.join(basedir, 'images_{}'.format(r))
+        if not os.path.exists(imgdir):
+            needtoload = True
+    for r in resolutions:
+        imgdir = os.path.join(basedir, 'images_{}x{}'.format(r[1], r[0]))
+        if not os.path.exists(imgdir):
+            needtoload = True
+    if not needtoload:
+        return
+    
+    from shutil import copy
+    from subprocess import check_output
+    
+    imgdir = os.path.join(basedir, 'images')
+    imgs = [os.path.join(imgdir, f) for f in sorted(os.listdir(imgdir))]
+    imgs = [f for f in imgs if any([f.endswith(ex) for ex in ['JPG', 'jpg', 'png', 'jpeg', 'PNG']])]
+    imgdir_orig = imgdir
+    
+    wd = os.getcwd()
+    resizearg = 0
+    for r in factors + resolutions:
+        if isinstance(r, int):
+            name = 'images_{}'.format(r)
+            resizearg = '{}%'.format(int(100./r))
+        else:
+            name = 'images_{}x{}'.format(r[1], r[0])
+            resizearg = '{}x{}'.format(r[1], r[0])
+        imgdir = os.path.join(basedir, name)
+        if os.path.exists(imgdir):
+            continue
+            
+        print('Minifying', r, basedir)
+        
+        os.makedirs(imgdir)
+        check_output('cp {}/* {}'.format(imgdir_orig, imgdir), shell=True)
+        
+        ext = imgs[0].split('.')[-1]
+        args = ' '.join(['mogrify', '-resize', resizearg, '-format', 'png', '*.{}'.format(ext)])
+        print(args)
+        os.chdir(imgdir)
+        check_output(args, shell=True)
+        os.chdir(wd)
+        
+        if ext != 'png':
+            check_output('rm {}/*.{}'.format(imgdir, ext), shell=True)
+            print('Removed duplicates')
+        print('Done')
+    return resizearg

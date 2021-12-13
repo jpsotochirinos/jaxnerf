@@ -1,6 +1,7 @@
 import math
 import csv 
 import numpy as np
+from jaxnerf.db.db import Tpu, db
 from tqdm import tqdm
 #def booth function (x+2y-7)^2 + (2x + y -5)^2
 
@@ -51,8 +52,13 @@ arr_population = np.random.uniform(-2,2,(num_population,num_dimensions))
 #print("Cantidad de iteraciones: ",const_steps,"\n")
 
 # loop de iteraciones
-for step in range(0, const_steps):
+_tpu = Tpu.query.filter_by(acelerator="v3-8").first()
 
+for step in range(0, const_steps):
+    if step == 1:
+      _tpu.status = True
+      db.session.merge(_tpu)
+      db.session.commit()
     #inicialización de arr auxiliares
     arr_fitness = []
     arr_parents = []
@@ -169,6 +175,9 @@ for i in range(0,len(arr_population)):
     sum_sd += math.pow((goldstein_price_function(arr_population[i])-mean_rate),2)/(num_population)
 
 standar_desviation = math.sqrt(sum_sd)
+_tpu.status = False
+db.session.merge(_tpu)
+db.session.commit()
 #print('\n')
 #print("El mejor: ", best_rate)
 #print("Media: ",mean_rate)

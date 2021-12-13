@@ -1,7 +1,8 @@
 #import jaxnerf.train as train
 from flask import config
 from flask.config import Config
-from jaxnerf.db.db import Model,Eval, Profile,Render,Train,db,app
+from jaxnerf.nd.dataset import DATA_DIR, TRAIN_DIR
+from jaxnerf.db.db import Model,Eval, Profile,Render,Train,Tpu,db,app
 from jaxnerf.db.init import init
 from flask import Flask, jsonify, request
 import subprocess
@@ -10,9 +11,10 @@ import time
 import os
 from jaxnerf.nd import dataset
 from jaxnerf.nd import utils
+import requests
 
 ##path = os.listdir('/mnt/nerf') ## /mnt/nerf
-
+TRAINING = False
 #app = Flask(__name__)
 
 @app.route('/create/',methods=['POST'])
@@ -43,43 +45,15 @@ async def create():
         except KeyError:
             print(KeyError)
         try:
-            _model.status = request.json['status'] 
-        except KeyError:
-            print(KeyError)
-        try:
-            _model.process = request.json['process'] 
-        except KeyError:
-            print(KeyError)
-        try:
-            _model.checkpoint = request.json['checkpoint'] 
-        except KeyError:
-            print(KeyError)
-        try:
-            _model.last_test = request.json['last_test'] 
-        except KeyError:
-            print(KeyError)
-        try:
-            _model.last_step = request.json['last_step'] 
-        except KeyError:
-            print(KeyError)
-        try:
-            _model.max_step = request.json['max_step'] 
-        except KeyError:
-            print(KeyError)
-        try:
-            _model.time_train = request.json['time_train']
-        except KeyError:
-            print(KeyError)
-        try:
-            _model.time_render = request.json['time_render'] 
-        except KeyError:
-            print(KeyError)
-        try:
             _model.config = request.json['config'] 
         except KeyError:
             print(KeyError)
         try:
-            _model.files_checker = request.json['files_checker'] 
+            _model.factor = request.json['factor'] 
+        except KeyError:
+            print(KeyError)
+        try:
+            _model.factor_guess = request.json['factor_guess'] 
         except KeyError:
             print(KeyError)
         
@@ -103,6 +77,8 @@ async def create():
             _profile_.model_3d=request.json['model_3d'] 
         except KeyError:
             print(KeyError)
+
+
     check_keys()
     _model.profiles.append(_profile_)
     try:   
@@ -129,20 +105,24 @@ async def create():
 @app.route('/check/',methods=['POST'])
 async def check():
     model = request.json['model']
+    fck= ""
     _model = Model.query.filter_by(model=model).first()
     if(_model is None):
         return jsonify({"status":"404",
                      "message": "model no found"})
     cpu= utils.checkCPU()
     mem= utils.checkMEM()
+    _model.factor=str(utils.check_img_size(_model.model))
     if(_model.status!="ready2train"):
         _status,files = utils.checkModelFile(model,True)
+        _model.files_checker = fck.join(files)
     else:
         _status = True
 
     if(cpu>80 and 
        mem>20 and 
-       _status):
+       _status and
+       _model.factor==_model.factor_guess):
         _model.status = "ready2train"
         db.session.merge(_model)
         db.session.commit()
@@ -150,34 +130,96 @@ async def check():
                     "cpu":cpu,
                     "memory": mem,
                     "files": _model.files_checker,
-                    "model_status":"ready2train",
+                    "factor": _model.factor,
+                    "model_status":_model.status,
                     "status":"200",
                      "message": "succes"})
     else:
         return  jsonify({
                     "files_checker": _model.files_checker,
+                    "files_factor": _model.factor,
                     "status":"503",
                     "message": "not enough resources"})
 
-@app.route('/train/',methods=['POST'])
-async def basic_train():
+@app.route('/resize_auth/',methods=['POST'])
+async def resize_auth():
     model = request.json['model']
     _model = Model.query.filter_by(model=model).first()
     if(_model is None):
         return jsonify({"status":"404",
                      "message": "model no found"})
-    ##if(_model.status != "ready2train"):
-    ##     return jsonify({"status":"400",
-    ##     "message": "no ready to train yet"})
 
+    if(_model.files_checker !="1111111"):
+        return jsonify({"status":"404",
+                     "message": "something wrong with files"})
+
+    if(_model.factor>_model.factor_guess):
+        r = utils.minify(_model.model,int(_model.factor))
+        _model.factor_guess = _model.factor
+        db.session.merge(_model)
+        db.session.commit()
+        return jsonify({"status":"200",
+                        "factor":_model.factor,
+                        "message": "resize in "+r+"%"})
+    else:
+        return  jsonify({
+                    "files_factor": _model.factor,
+                    "status":"200",
+                    "message": "unchanged"})
+
+@app.route('/resize/',methods=['POST'])
+async def resize():
+    model = request.json['model']
+    factor = request.json['factor']
+    _model = Model.query.filter_by(model=model).first()
+    if(_model is None):
+        return jsonify({"status":"404",
+                     "message": "model no found"})
+
+    if(_model.files_checker !="1111111"):
+        return jsonify({"status":"404",
+                     "message": "something wrong with files"})
+    
+    r = utils.minify(_model.model,factors=[int(factor)])
+    _model.factor = factor
+    _model.factor_guess = factor
+    db.session.merge(_model)
+    db.session.commit()
+    return jsonify({"status":"200",
+                    "factor":_model.factor,
+                    "message": "resize in "+r})
+
+
+@app.route('/train/',methods=['POST'])
+async def basic_train():
+    _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+    model = request.json['model']
+    _model = Model.query.filter_by(model=model).first()
+    if(_model is None):
+        return jsonify({"status":"404",
+                     "message": "model no found"})
+                     
+    if(_tpu.status):
+        return jsonify({"status":"500",
+        "message": "training"})
+
+    if(_model.status != "ready2train"):
+        return jsonify({"status":"400",
+        "message": "no ready to train yet"})
+    
     try:
-        print(model)
+        _dataDir= DATA_DIR+_model.model
+        _trainDir= TRAIN_DIR+_model.model
+        _config = "configs/"+_model.config
         #comando en segundo plano
-        __proce = subprocess.Popen(["python","-m" ,"jaxnerf.process_test.test"])
+        _test = ["python","-m","jaxnerf.process_test.test"]
+        _train = ["python","-m" ,"jaxnerf.train",
+                  "--data_dir="+_dataDir,
+                  "--train_dir="+_trainDir,
+                  "--config="+_config,
+                  "--factor="+_model.factor]
+        __proce = subprocess.Popen(_test)
         _model.process = __proce.pid
-        #"--data_dir ",dataset.DATA_DIR,
-        #"--train_dir ",dataset.TRAIN_DIR,
-        #"--config ",dataset.CONFIG])
         _model.status = "training"
         db.session.merge(_model)
         db.session.commit()
@@ -199,7 +241,7 @@ async def home():
         return  jsonify({"status":"500",
                      "message": "erro"})
 
-@app.route('/model/',methods=['POST'])
+@app.route('/model/',methods=['GET'])
 def model_status():
     try:
        db.session.commit()
@@ -242,7 +284,7 @@ def model_status():
         return  jsonify({"status":"500",
                      "message": "erro"})
 
-@app.route('/model/train/',methods=['POST'])
+@app.route('/model/train/',methods=['GET'])
 def model_train():
     db.session.commit()
     model = request.json['model']
@@ -312,6 +354,7 @@ async def status():
 async def stop():
     model = request.json['model']
     _model = Model.query.filter_by(model=model).first()
+    _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
     _pid = _model.process
     process =[]
     procObjList = [procObj for procObj in psutil.process_iter() if int(_pid) == procObj.pid ]
@@ -329,7 +372,11 @@ async def stop():
                     "status": "stopped",
                     "create_time":process_create_time
                 })
-
+        _tpu.status = False
+        _model.status = 'stopped'
+        db.session.merge(_tpu)
+        db.session.merge(_model)
+        db.session.commit()
         return jsonify({
             "process":process,
             "status":202,
@@ -359,5 +406,39 @@ if __name__ == '__main__':
     else:
         print(" * DataBase created")
         init()
+    _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+    if(_tpu is None):
+        #try:
+        accelerator_type ="v3-8"
+        #accelerator_type =requests.get('http://metadata.google.internal/computeMetadata/v1/instance/attributes/accelerator-type',headers={'Metadata-Flavor': 'Google'}).text
+        _tpu  = Tpu(
+                    type="VM",
+                    acelerator=accelerator_type,
+                    cores="8",
+                    tpu_mem="128",
+                    mem="365",
+                    cpu="96",
+                    status =False
+            )
+        db.session.add(_tpu)
+        db.session.commit()
+        print(" * TPU profile created " +_tpu.type+" "+_tpu.acelerator)
+        # except requests.exceptions.ConnectionError:
+        #     accelerator_type = "node"
+        #     _tpu  = Tpu(
+        #             type="Node",
+        #             acelerator="v3-8",
+        #             cores="8",
+        #             tpu_mem="128",
+        #             mem="40",
+        #             cpu="10",
+        #             status =False
+        #         )
+        #     db.session.add(_tpu)
+        #     db.session.commit()
+        #     print(" * TPU profile created " +_tpu.type+" "+_tpu.acelerator)
+    else:
+        print(" * TPU profile already created " +_tpu.type+" "+_tpu.acelerator)
+    
     app.debug = True
     app.run(host = '0.0.0.0',port= 3000)

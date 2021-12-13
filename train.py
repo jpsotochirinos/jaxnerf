@@ -18,6 +18,7 @@
 
 import functools
 import gc
+from threading import setprofile
 import time
 from absl import app
 from absl import flags
@@ -33,7 +34,8 @@ import numpy as np
 from jaxnerf.nerf import datasets
 from jaxnerf.nerf import models
 from jaxnerf.nerf import utils
-from jaxnerf.db.db import Model,Train, db
+from jaxnerf.db.db import Model,Train,Tpu, db
+from jaxnerf.nd import utils as utl
 
 FLAGS = flags.FLAGS
 
@@ -119,6 +121,9 @@ def main(unused_argv):
   # Shift the numpy random seed by host_id() to shuffle data loaded by different
   # hosts.
   model_name = FLAGS.train_dir.split('/')[-1]
+  _model = Model.query.filter_by(model=model_name).first()
+  _train = Train()
+  _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
   np.random.seed(20201473 + jax.host_id())
   
   if FLAGS.config is not None:
@@ -186,6 +191,8 @@ def main(unused_argv):
   gc.disable()  # Disable automatic garbage collection for efficiency.
   stats_trace = []
   reset_timer = True
+
+
   for step, batch in zip(range(init_step, FLAGS.max_steps + 1), pdataset):
     if reset_timer:
       t_loop_start = time.time()
@@ -196,10 +203,14 @@ def main(unused_argv):
       stats_trace.append(stats)
     if step % FLAGS.gc_every == 0:
       gc.collect()
-
+    if step == 1:
+      _tpu.status = True
+      db.session.merge(_tpu)
+      db.session.commit()
     # Log training summaries. This is put behind a host_id check because in
     # multi-host evaluation, all hosts need to run inference even though we
     # only use host 0 to record results.
+    _model.last_step = str(step)
     if jax.host_id() == 0:
       if step % FLAGS.print_every == 0:
         summary_writer.scalar("train_loss", stats.loss[0], step)
@@ -224,11 +235,28 @@ def main(unused_argv):
               f"avg_loss={avg_loss:0.4f}, " +
               f"weight_l2={stats.weight_l2[0]:0.2e}, " + f"lr={lr:0.2e}, " +
               f"{rays_per_sec:0.0f} rays/sec")
+        _train.last_step=str(step)
+        _train.i_loss= f'{stats.loss[0]:0.4f}'
+        _train.avg_loss=f'{avg_loss:0.4f}'
+        _train.weight_l2=f'{stats.weight_l2[0]:0.2e}'
+        _train.lr=f'{lr:0.2e}'
+        _train.rays_per_sec=f'{rays_per_sec:0.0f}'
+        _train.cpu_percent=utl.checkCPU()
+        _train.mem_percent=utl.checkMEM()
+        _train.type_step='step'      
+
       if step % FLAGS.save_every == 0:
         state_to_save = jax.device_get(jax.tree_map(lambda x: x[0], state))
         checkpoints.save_checkpoint(
             FLAGS.train_dir, state_to_save, int(step), keep=100)
+        _model.checkpoint =str(step)
+        _train.cpu_percent=utl.checkCPU()
+        _train.mem_percent=utl.checkMEM()
+        _train.type_step='checkpoint'
 
+
+
+      
     # Test-set evaluation.
     if FLAGS.render_every > 0 and step % FLAGS.render_every == 0:
       # We reuse the same random number generator from the optimization step
@@ -238,18 +266,21 @@ def main(unused_argv):
       eval_variables = jax.device_get(jax.tree_map(lambda x: x[0],
                                                    state)).optimizer.target
       test_case = next(test_dataset)
+      
       pred_color, pred_disp, pred_acc = utils.render_image(
           functools.partial(render_pfn, eval_variables),
           test_case["rays"],
           keys[0],
           FLAGS.dataset == "llff",
           chunk=FLAGS.chunk)
-
+      
       # Log eval summaries on host 0.
       if jax.host_id() == 0:
         psnr = utils.compute_psnr(
             ((pred_color - test_case["pixels"])**2).mean())
         ssim = ssim_fn(pred_color, test_case["pixels"])
+        _train.cpu_percent=utl.checkCPU()
+        _train.mem_percent=utl.checkMEM()
         eval_time = time.time() - t_eval_start
         num_rays = jnp.prod(jnp.array(test_case["rays"].directions.shape[:-1]))
         rays_per_sec = num_rays / eval_time
@@ -261,11 +292,24 @@ def main(unused_argv):
         summary_writer.image("test_pred_disp", pred_disp, step)
         summary_writer.image("test_pred_acc", pred_acc, step)
         summary_writer.image("test_target", test_case["pixels"], step)
+        _train.rays_per_sec=f'{rays_per_sec:0.0f}'
+        _train.ssim=str(ssim)
+        _train.psnr=str(psnr)
+        _train.eval_time=f'{eval_time:0.3f}'
+        _model.last_test =str(step)
+        _train.type_step='eval'
+
+    _model.trains.append(_train)
+    db.session.merge(_model)
+    db.session.commit()
 
   if FLAGS.max_steps % FLAGS.save_every != 0:
     state = jax.device_get(jax.tree_map(lambda x: x[0], state))
     checkpoints.save_checkpoint(
         FLAGS.train_dir, state, int(FLAGS.max_steps), keep=100)
+    _tpu.status = False
+    db.session.merge(_tpu)
+    db.session.commit()
 
 
 if __name__ == "__main__":

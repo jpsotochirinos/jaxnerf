@@ -34,6 +34,8 @@ class Model(db.Model):
     type = db.Column(db.String(80), default="patrimonio")
     status = db.Column(db.String(80), default="starting")
     process = db.Column(db.String(80), default="")
+    factor = db.Column(db.String(80), default="0") #
+    factor_guess = db.Column(db.String(80), default="0") #
     checkpoint = db.Column(db.String(120), default="0")
     last_test= db.Column(db.String(120), default="0")
     last_step= db.Column(db.String(120), default="0")
@@ -49,15 +51,18 @@ class Model(db.Model):
 
 class Train(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    last_step= db.Column(db.String(120), nullable=False)
-    i_loss= db.Column(db.String(120), nullable=False)
-    avg_loss= db.Column(db.String(120), nullable=False)
-    weight_l2= db.Column(db.String(120), nullable=False)
-    lr = db.Column(db.String(120), nullable=False)
-    rays_per_sec= db.Column(db.String(120), nullable=False)
-    cpu_percent = db.Column(db.String(120), nullable=False)
-    mem_percent = db.Column(db.String(120), nullable=False)
-    type_step = db.Column(db.String(120), nullable=False)
+    last_step= db.Column(db.String(120), default="0")
+    i_loss= db.Column(db.String(120), default="0")
+    avg_loss= db.Column(db.String(120), default="0")
+    weight_l2= db.Column(db.String(120), default="0")
+    lr = db.Column(db.String(120), default="0")
+    rays_per_sec= db.Column(db.String(120), default="0")
+    cpu_percent = db.Column(db.String(120), default="0")
+    mem_percent = db.Column(db.String(120), default="0")
+    type_step = db.Column(db.String(120), default="0")
+    psnr = db.Column(db.String(120), default="0") #
+    ssim = db.Column(db.String(120), default="0") #
+    eval_time = db.Column(db.String(120), default="0") #
     
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'),
         nullable=False)
@@ -102,3 +107,16 @@ class Render(db.Model):
     
     def __repr__(self):
         return '<Render %r>' % self.rg_model
+
+class Tpu(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    type= db.Column(db.String(120), default="VM")
+    acelerator= db.Column(db.String(120), default="v3-08")
+    cores= db.Column(db.String(120), default="8")
+    tpu_mem= db.Column(db.String(120), default="128")
+    mem= db.Column(db.String(120), default="365")
+    cpu= db.Column(db.String(120), default="96")
+    status = db.Column(db.Boolean, default=False)
+    
+    def __repr__(self):
+        return '<TPU %r>' % self.acelerator
