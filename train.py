@@ -124,6 +124,8 @@ def main(unused_argv):
   _model = Model.query.filter_by(model=model_name).first()
   _train = Train()
   _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+  _tpu.model = _model.model
+  _tpu.pid_model = _model.process
   np.random.seed(20201473 + jax.host_id())
   
   if FLAGS.config is not None:
@@ -211,6 +213,9 @@ def main(unused_argv):
     # multi-host evaluation, all hosts need to run inference even though we
     # only use host 0 to record results.
     _model.last_step = str(step)
+    _tpu.type_step='step'
+    db.session.merge(_tpu)
+    db.session.commit()
     if jax.host_id() == 0:
       if step % FLAGS.print_every == 0:
         summary_writer.scalar("train_loss", stats.loss[0], step)
@@ -240,19 +245,16 @@ def main(unused_argv):
         _train.avg_loss=f'{avg_loss:0.4f}'
         _train.weight_l2=f'{stats.weight_l2[0]:0.2e}'
         _train.lr=f'{lr:0.2e}'
-        _train.rays_per_sec=f'{rays_per_sec:0.0f}'
-        _train.cpu_percent=utl.checkCPU()
-        _train.mem_percent=utl.checkMEM()
-        _train.type_step='step'      
+        _train.rays_per_sec=f'{rays_per_sec:0.0f}'     
 
       if step % FLAGS.save_every == 0:
+        _tpu.type_step='checkpoint'
+        db.session.merge(_tpu)
+        db.session.commit()
         state_to_save = jax.device_get(jax.tree_map(lambda x: x[0], state))
         checkpoints.save_checkpoint(
             FLAGS.train_dir, state_to_save, int(step), keep=100)
         _model.checkpoint =str(step)
-        _train.cpu_percent=utl.checkCPU()
-        _train.mem_percent=utl.checkMEM()
-        _train.type_step='checkpoint'
 
 
 
@@ -262,6 +264,9 @@ def main(unused_argv):
       # We reuse the same random number generator from the optimization step
       # here on purpose so that the visualization matches what happened in
       # training.
+      _tpu.type_step='eval'
+      db.session.merge(_tpu)
+      db.session.commit()
       t_eval_start = time.time()
       eval_variables = jax.device_get(jax.tree_map(lambda x: x[0],
                                                    state)).optimizer.target
@@ -279,8 +284,6 @@ def main(unused_argv):
         psnr = utils.compute_psnr(
             ((pred_color - test_case["pixels"])**2).mean())
         ssim = ssim_fn(pred_color, test_case["pixels"])
-        _train.cpu_percent=utl.checkCPU()
-        _train.mem_percent=utl.checkMEM()
         eval_time = time.time() - t_eval_start
         num_rays = jnp.prod(jnp.array(test_case["rays"].directions.shape[:-1]))
         rays_per_sec = num_rays / eval_time
@@ -297,8 +300,7 @@ def main(unused_argv):
         _train.psnr=str(psnr)
         _train.eval_time=f'{eval_time:0.3f}'
         _model.last_test =str(step)
-        _train.type_step='eval'
-
+        
     _model.trains.append(_train)
     db.session.merge(_model)
     db.session.commit()
@@ -308,6 +310,9 @@ def main(unused_argv):
     checkpoints.save_checkpoint(
         FLAGS.train_dir, state, int(FLAGS.max_steps), keep=100)
     _tpu.status = False
+    _tpu.model = ""
+    _tpu.type_step = ""
+    _tpu.pid_model = ""
     db.session.merge(_tpu)
     db.session.commit()
 

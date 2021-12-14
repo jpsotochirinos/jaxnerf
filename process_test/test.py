@@ -1,7 +1,7 @@
 import math
 import csv 
 import numpy as np
-from jaxnerf.db.db import Tpu, db
+from jaxnerf.db.db import Model, Tpu, db
 from tqdm import tqdm
 #def booth function (x+2y-7)^2 + (2x + y -5)^2
 
@@ -55,10 +55,6 @@ arr_population = np.random.uniform(-2,2,(num_population,num_dimensions))
 _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
 
 for step in range(0, const_steps):
-    if step == 1:
-      _tpu.status = True
-      db.session.merge(_tpu)
-      db.session.commit()
     #inicialización de arr auxiliares
     arr_fitness = []
     arr_parents = []

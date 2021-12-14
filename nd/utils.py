@@ -6,7 +6,7 @@ import os
 from os import path
 import numpy as np
 from jaxnerf.nd.dataset import *
-from jaxnerf.db.db import Model,db
+from jaxnerf.db.db import Performance,Model,db
 from jaxnerf.nerf import utils
 
 def checkIfProcessRunning(processName):
@@ -162,3 +162,19 @@ def minify(model, factors=[], resolutions=[]):
             print('Removed duplicates')
         print('Done')
     return resizearg
+
+def median_cpu_men_by_model(model):
+    _perf = Performance.query.filter_by(model=model).all()
+    cpu_list = np.array([perf.cpu_percent for perf in _perf]).astype(np.float64)
+    men_list = np.array([perf.mem_percent for perf in _perf]).astype(np.float64)
+    median_cpu = np.median(cpu_list) 
+    median_men = np.median(men_list) 
+    return median_cpu,median_men
+
+def median_cpu_men():
+    _perf = Performance.query.all()
+    cpu_list = np.array([perf.cpu_percent for perf in _perf]).astype(np.float64)
+    men_list = np.array([perf.mem_percent for perf in _perf]).astype(np.float64)
+    median_cpu = np.median(cpu_list) 
+    median_men = np.median(men_list) 
+    return median_cpu,median_men

@@ -43,7 +43,7 @@ class Model(db.Model):
     time_train = db.Column(db.String(120), default="0")
     time_render = db.Column(db.String(120), default="0")
     config = db.Column(db.String(120), default="llff")
-    files_checker = db.Column(db.String(120), default="0000000")
+    files_checker = db.Column(db.String(120), default="00000000")
     
     
     def __repr__(self):
@@ -57,13 +57,9 @@ class Train(db.Model):
     weight_l2= db.Column(db.String(120), default="0")
     lr = db.Column(db.String(120), default="0")
     rays_per_sec= db.Column(db.String(120), default="0")
-    cpu_percent = db.Column(db.String(120), default="0")
-    mem_percent = db.Column(db.String(120), default="0")
-    type_step = db.Column(db.String(120), default="0")
     psnr = db.Column(db.String(120), default="0") #
     ssim = db.Column(db.String(120), default="0") #
     eval_time = db.Column(db.String(120), default="0") #
-    
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'),
         nullable=False)
     model = db.relationship('Model',
@@ -77,11 +73,8 @@ class Eval(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     psnr= db.Column(db.String(120), nullable=False)
     ssim= db.Column(db.String(120), nullable=False)
-    cpu_percent= db.Column(db.String(120), nullable=False)
-    mem_percent= db.Column(db.String(120), nullable=False)
     eval= db.Column(db.String(120), nullable=False)
     eval_path = db.Column(db.String(120), nullable=False)
-
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'),
         nullable=False)
     model = db.relationship('Model',
@@ -95,10 +88,7 @@ class Render(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type= db.Column(db.String(120), nullable=False)
     n_images= db.Column(db.String(120), nullable=False)
-    cpu_percent= db.Column(db.String(120), nullable=False)
-    mem_percent= db.Column(db.String(120), nullable=False)
     render_path= db.Column(db.String(120), nullable=False)
-
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'),
         nullable=False)
     model = db.relationship('Model',
@@ -116,7 +106,20 @@ class Tpu(db.Model):
     tpu_mem= db.Column(db.String(120), default="128")
     mem= db.Column(db.String(120), default="365")
     cpu= db.Column(db.String(120), default="96")
+    model = db.Column(db.String(120), default="")
+    pid_model = db.Column(db.String(120), default="")
     status = db.Column(db.Boolean, default=False)
+    type_step = db.Column(db.String(120), default="none")
     
     def __repr__(self):
         return '<TPU %r>' % self.acelerator
+
+class Performance(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    model = db.Column(db.String(120), default="")
+    cpu_percent = db.Column(db.String(120), default="0")
+    mem_percent = db.Column(db.String(120), default="0")
+    type_step = db.Column(db.String(120), default="none")
+
+    def __repr__(self):
+        return '<Performance %r>' % self.model

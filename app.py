@@ -2,7 +2,7 @@
 from flask import config
 from flask.config import Config
 from jaxnerf.nd.dataset import DATA_DIR, TRAIN_DIR
-from jaxnerf.db.db import Model,Eval, Profile,Render,Train,Tpu,db,app
+from jaxnerf.db.db import Model,Eval, Profile,Render,Train,Tpu,Performance,db,app
 from jaxnerf.db.init import init
 from flask import Flask, jsonify, request
 import subprocess
@@ -12,7 +12,7 @@ import os
 from jaxnerf.nd import dataset
 from jaxnerf.nd import utils
 import requests
-
+import time
 ##path = os.listdir('/mnt/nerf') ## /mnt/nerf
 TRAINING = False
 #app = Flask(__name__)
@@ -110,9 +110,18 @@ async def check():
     if(_model is None):
         return jsonify({"status":"404",
                      "message": "model no found"})
+    _model.factor=str(utils.check_img_size(_model.model))
+    if(_model.factor!=_model.factor_guess):
+        _model.status = "checkresize"
+        db.session.merge(_model)
+        db.session.commit()
+        return jsonify({"status":"505",
+                        "factor_ok":_model.factor,
+                        "factor_guess":_model.factor_guess,
+                        "model_status":_model.status,
+                        "message": "check factor and resize"})
     cpu= utils.checkCPU()
     mem= utils.checkMEM()
-    _model.factor=str(utils.check_img_size(_model.model))
     if(_model.status!="ready2train"):
         _status,files = utils.checkModelFile(model,True)
         _model.files_checker = fck.join(files)
@@ -149,7 +158,7 @@ async def resize_auth():
         return jsonify({"status":"404",
                      "message": "model no found"})
 
-    if(_model.files_checker !="1111111"):
+    if(_model.files_checker !="11111111"):
         return jsonify({"status":"404",
                      "message": "something wrong with files"})
 
@@ -198,7 +207,7 @@ async def basic_train():
     if(_model is None):
         return jsonify({"status":"404",
                      "message": "model no found"})
-                     
+
     if(_tpu.status):
         return jsonify({"status":"500",
         "message": "training"})
@@ -213,16 +222,25 @@ async def basic_train():
         _config = "configs/"+_model.config
         #comando en segundo plano
         _test = ["python","-m","jaxnerf.process_test.test"]
+        _perf = ["python","-m","jaxnerf.performance"]
         _train = ["python","-m" ,"jaxnerf.train",
                   "--data_dir="+_dataDir,
                   "--train_dir="+_trainDir,
                   "--config="+_config,
                   "--factor="+_model.factor]
-        __proce = subprocess.Popen(_test)
+        #_catch = subprocess.Popen(_test)
+        __proce = subprocess.Popen(_test)       
         _model.process = __proce.pid
         _model.status = "training"
+        _tpu.status = True
+        _tpu.model = _model.model
+        _tpu.pid_model = __proce.pid
         db.session.merge(_model)
+        db.session.merge(_tpu)
         db.session.commit()
+        #time.sleep(1)
+        __perf = subprocess.Popen(_perf)
+        print(__perf.pid)
         return  jsonify({"status":"200",
                         "message": "succes"})
     except ValueError:
@@ -318,11 +336,12 @@ def model_train():
 async def status():
     model = request.json['model']
     _model = Model.query.filter_by(model=model).first()
+    if(_model is None):
+        return  jsonify({"status":"404",
+                    "message": "no found"})
     _pid = _model.process
     process = []
     procObjList = [procObj for procObj in psutil.process_iter() if int(_pid) == procObj.pid ]
-    print(_pid)
-    print(procObjList)
     if (len(procObjList)>0):
         for elem in procObjList:
             process_pid = elem.pid
@@ -330,13 +349,12 @@ async def status():
             process_status = elem.status()
             process_create_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(elem.create_time()))
             if(process_status=="running"):
-                print('here')
-            process.append ({
-                "pid": str(process_pid),
-                "name": process_name,
-                "status": process_status,
-                "create_time":process_create_time
-            })
+                process.append ({
+                    "pid": str(process_pid),
+                    "name": process_name,
+                    "status": process_status,
+                    "create_time":process_create_time
+                })
 
         return jsonify({
             "process":process,
@@ -354,6 +372,9 @@ async def status():
 async def stop():
     model = request.json['model']
     _model = Model.query.filter_by(model=model).first()
+    if(_model is None):
+        return  jsonify({"status":"404",
+                    "message": "no found"})
     _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
     _pid = _model.process
     process =[]
@@ -373,6 +394,9 @@ async def stop():
                     "create_time":process_create_time
                 })
         _tpu.status = False
+        _tpu.model = ""
+        _tpu.type_step = ""
+        _tpu.pid_model = ""
         _model.status = 'stopped'
         db.session.merge(_tpu)
         db.session.merge(_model)
@@ -384,14 +408,41 @@ async def stop():
         })
                     
     else:
+        _tpu.status = False
+        _tpu.model = ""
+        _tpu.type_step = ""
+        _tpu.pid_model = ""
         _model.status = 'stopped'
+        db.session.merge(_tpu)
         db.session.merge(_model)
         db.session.commit()
         return jsonify({
             "status":404,
             "message":"no found process"
         })
-        
+
+@app.route('/performance/model/',methods=['POST']) 
+async def performance_model():
+    model = request.json['model']
+    _model = Model.query.filter_by(model=model).first()
+    if(_model is None):
+        return  jsonify({"status":"404",
+                    "message": "no found"})
+    _cpu,_men = utils.median_cpu_men_by_model(_model.model)
+    return jsonify({"status":"200",
+                    "cpu":_cpu,
+                    "mem":_men,
+                    "message": "median performance of "+_model.model+" training"})
+
+@app.route('/performance/',methods=['POST']) 
+async def performance():
+    _cpu,_men = utils.median_cpu_men()
+    return jsonify({"status":"200",
+                    "cpu":_cpu,
+                    "mem":_men,
+                    "message": "median performance"})  
+
+
 if __name__ == '__main__':
     if(os.path.exists('tmp') and os.path.exists('tmp/models')):
         print(" * Folder tmp already created")
