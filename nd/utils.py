@@ -177,3 +177,11 @@ def median_cpu_men():
     median_cpu = np.median(cpu_list) 
     median_men = np.median(men_list) 
     return median_cpu,median_men
+
+def median_cpu_men_by_type(type_step):
+    _perf = Performance.query.filter_by(type_step=type_step).all()
+    cpu_list = np.array([perf.cpu_percent for perf in _perf]).astype(np.float64)
+    men_list = np.array([perf.mem_percent for perf in _perf]).astype(np.float64)
+    median_cpu = np.median(cpu_list) 
+    median_men = np.median(men_list) 
+    return median_cpu,median_men

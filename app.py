@@ -439,6 +439,15 @@ async def performance():
                     "cpu":_cpu,
                     "mem":_men,
                     "message": "median performance"})  
+                    
+@app.route('/performance/',methods=['POST']) 
+async def performance():
+    _type_step = request.json['type_step']
+    _cpu,_men = utils.median_cpu_men_by_type(_type_step)
+    return jsonify({"status":"200",
+                    "cpu":_cpu,
+                    "mem":_men,
+                    "message": "median performance"})  
 
 
 if __name__ == '__main__':
