@@ -7,7 +7,7 @@ from os import path
 import numpy as np
 from jaxnerf.nd.dataset import *
 from jaxnerf.db.db import Performance,Model,db
-from jaxnerf.nerf import utils
+#from jaxnerf.nerf import utils
 
 def checkIfProcessRunning(processName):
     for proc in psutil.process_iter():
@@ -32,9 +32,9 @@ def checkModelFile(model,only):
     check_sparce_0_files = False
     check_images_folder = os.path.exists(DATA_DIR+model+'/images/')
     check_images_files = False
-    with utils.open_file(path.join(DATA_DIR+model, "poses_bounds.npy"),"rb") as fp:
-      poses_arr = np.load(fp)
-    poses = poses_arr[:, :-2].reshape([-1, 3, 5]).transpose([1, 2, 0])
+    #with utils.open_file(path.join(DATA_DIR+model, "poses_bounds.npy"),"rb") as fp:
+    #  poses_arr = np.load(fp)
+    #poses = poses_arr[:, :-2].reshape([-1, 3, 5]).transpose([1, 2, 0])
 
     if(check_sparce_0_folder):
         bin_arr = ['cameras.bin','images.bin','points3D.bin','project.ini']
@@ -42,7 +42,7 @@ def checkModelFile(model,only):
         check_sparce_0_files = (len(sparce_bin_files)==len(bin_arr))
     
     if(check_images_folder and check_sparce_0_files):
-        images_arr = poses.shape[-1]
+        images_arr = 12#poses.shape[-1]
         images_files = os.listdir(DATA_DIR+model+'/images/')
         check_images_files = (images_arr == len(images_files)) 
     check_arr = [
