@@ -28,15 +28,13 @@ import flax
 from flax.metrics import tensorboard
 from flax.training import checkpoints
 import jax
+
 from jax import config
-path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-path = path.split(':')
-url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
-reqq = requests.post(url)
-print(reqq)
+
 TPU_DRIVER_MODE = 1
 config.FLAGS.jax_xla_backend = "tpu_driver"
 config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+
 from jax import random
 import jax.numpy as jnp
 import numpy as np
