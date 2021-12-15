@@ -9,7 +9,7 @@ while _tpu.status:
     print(procObjList)
     if (len(procObjList)>0):
         obj = [elem for elem in procObjList]
-        if(obj[0].status()=="running"):
+        if(obj[0].status()=="running" or obj[0].status()=='disk-sleep'):
             try:
                 _performance = Performance(
                     model =_tpu.model,
