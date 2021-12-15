@@ -11,8 +11,7 @@ import time
 import os
 from jaxnerf.nd import dataset
 from jaxnerf.nd import utils
-import requests
-import time
+
 ##path = os.listdir('/mnt/nerf') ## /mnt/nerf
 TRAINING = False
 #app = Flask(__name__)
@@ -238,7 +237,6 @@ async def basic_train():
         db.session.merge(_model)
         db.session.merge(_tpu)
         db.session.commit()
-        #time.sleep(1)
         __perf = subprocess.Popen(_perf)
         print(__perf.pid)
         return  jsonify({"status":"200",
@@ -444,52 +442,6 @@ async def performance():
 
 
 if __name__ == '__main__':
-    if(os.path.exists('tmp') and os.path.exists('tmp/models')):
-        print(" * Folder tmp already created")
-    else:
-        tmp_path = os.path.join(dataset.ROOT_DIR,'tmp')
-        models_path = os.path.join(dataset.ROOT_DIR+'/tmp','models')
-        os.mkdir(tmp_path)
-        os.mkdir(models_path)
-        print(" * Folder tmp created")
-    if(os.path.exists('jaxnerf/db/datatrain.db')):
-        print(" * DataBase already created")
-    else:
-        print(" * DataBase created")
-        init()
-    _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
-    if(_tpu is None):
-        #try:
-        accelerator_type ="v3-8"
-        #accelerator_type =requests.get('http://metadata.google.internal/computeMetadata/v1/instance/attributes/accelerator-type',headers={'Metadata-Flavor': 'Google'}).text
-        _tpu  = Tpu(
-                    type="VM",
-                    acelerator=accelerator_type,
-                    cores="8",
-                    tpu_mem="128",
-                    mem="365",
-                    cpu="96",
-                    status =False
-            )
-        db.session.add(_tpu)
-        db.session.commit()
-        print(" * TPU profile created " +_tpu.type+" "+_tpu.acelerator)
-        # except requests.exceptions.ConnectionError:
-        #     accelerator_type = "node"
-        #     _tpu  = Tpu(
-        #             type="Node",
-        #             acelerator="v3-8",
-        #             cores="8",
-        #             tpu_mem="128",
-        #             mem="40",
-        #             cpu="10",
-        #             status =False
-        #         )
-        #     db.session.add(_tpu)
-        #     db.session.commit()
-        #     print(" * TPU profile created " +_tpu.type+" "+_tpu.acelerator)
-    else:
-        print(" * TPU profile already created " +_tpu.type+" "+_tpu.acelerator)
-    
+
     app.debug = True
     app.run(host = '0.0.0.0',port= 3000)
