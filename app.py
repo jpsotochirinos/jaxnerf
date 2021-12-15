@@ -454,11 +454,11 @@ async def performance_by():
 
 
 if __name__ == '__main__':
-    if(os.path.exists('tmp') and os.path.exists('tmp/models')):
+    if(os.path.exists('tmp_2') and os.path.exists('tmp_2/models')):
         print(" * Folder tmp already created")
     else:
-        tmp_path = os.path.join(dataset.ROOT_DIR,'tmp')
-        models_path = os.path.join(dataset.ROOT_DIR+'/tmp','models')
+        tmp_path = os.path.join(dataset.ROOT_DIR,'tmp_2')
+        models_path = os.path.join(dataset.ROOT_DIR+'/tmp_2','models')
         os.mkdir(tmp_path)
         os.mkdir(models_path)
         print(" * Folder tmp created")
