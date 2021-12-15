@@ -55,10 +55,13 @@ arr_population = np.random.uniform(-2,2,(num_population,num_dimensions))
 _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
 
 for step in range(0, const_steps):
+    db.session.commit()
     #inicialización de arr auxiliares
     arr_fitness = []
     arr_parents = []
-
+    _tpu.status = True
+    db.session.merge(_tpu)
+    db.session.commit()
     arr_num_parents = []
     arr_new_population = []
 
