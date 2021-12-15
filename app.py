@@ -240,8 +240,8 @@ async def basic_train():
         db.session.merge(_model)
         db.session.merge(_tpu)
         db.session.commit()
-        #__perf = subprocess.Popen(_perf)
-        #print(__perf.pid)
+        __perf = subprocess.Popen(_perf)
+        print(__perf.pid)
         return  jsonify({"status":"200",
                         "message": "succes"})
     except ValueError:
