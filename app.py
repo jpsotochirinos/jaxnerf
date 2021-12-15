@@ -128,16 +128,10 @@ async def check():
     else:
         _status = True
         _model.files_checker = "11111111"
-    path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-    path = path.split(':')
-    url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
-    reqq = requests.post(url)
-    print(reqq)
     if(cpu>80 and 
        mem>20 and 
        _status and
-       _model.factor==_model.factor_guess and
-       reqq.status_code == 200
+       _model.factor==_model.factor_guess 
        ):
         _model.status = "ready2train"
         db.session.merge(_model)
@@ -476,6 +470,15 @@ if __name__ == '__main__':
     _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
     if(_tpu is None):
         #try:
+        path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+        path = path.split(':')
+        url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
+        reqq = requests.post(url)
+        print(reqq)
+        if(reqq.status_code == 200):
+            print(" * TPU node conected " +_tpu.type+" "+_tpu.acelerator)
+        else:
+            print(" * TPU node disconected " +_tpu.type+" "+_tpu.acelerator)
         accelerator_type ="v3-8"
         #accelerator_type =requests.get('http://metadata.google.internal/computeMetadata/v1/instance/attributes/accelerator-type',headers={'Metadata-Flavor': 'Google'}).text
         _tpu  = Tpu(
