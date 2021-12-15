@@ -164,6 +164,8 @@ def minify(model, factors=[], resolutions=[]):
 
 def median_cpu_men_by_model(model):
     _perf = Performance.query.filter_by(model=model).all()
+    if(_perf is None):
+        return  0,0
     cpu_list = np.array([perf.cpu_percent for perf in _perf]).astype(np.float64)
     men_list = np.array([perf.mem_percent for perf in _perf]).astype(np.float64)
     median_cpu = np.median(cpu_list) 
@@ -172,6 +174,8 @@ def median_cpu_men_by_model(model):
 
 def median_cpu_men():
     _perf = Performance.query.all()
+    if(_perf is None):
+        return  0,0
     cpu_list = np.array([perf.cpu_percent for perf in _perf]).astype(np.float64)
     men_list = np.array([perf.mem_percent for perf in _perf]).astype(np.float64)
     median_cpu = np.median(cpu_list) 
@@ -180,6 +184,8 @@ def median_cpu_men():
 
 def median_cpu_men_by_type(type_step):
     _perf = Performance.query.filter_by(type_step=type_step).all()
+    if(_perf is None):
+        return  0,0
     cpu_list = np.array([perf.cpu_percent for perf in _perf]).astype(np.float64)
     men_list = np.array([perf.mem_percent for perf in _perf]).astype(np.float64)
     median_cpu = np.median(cpu_list) 
