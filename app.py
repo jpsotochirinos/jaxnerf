@@ -126,6 +126,7 @@ async def check():
         _model.files_checker = fck.join(files)
     else:
         _status = True
+        _model.files_checker = "11111111"
 
     if(cpu>80 and 
        mem>20 and 
