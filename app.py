@@ -228,7 +228,7 @@ async def basic_train():
                   "--config="+_config,
                   "--factor="+_model.factor]
         #_catch = subprocess.Popen(_test)
-        __proce = subprocess.Popen(_test)       
+        __proce = subprocess.Popen(_train)       
         _model.process = __proce.pid
         _model.status = "training"
         _tpu.status = True
