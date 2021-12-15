@@ -263,6 +263,7 @@ def main(unused_argv):
         checkpoints.save_checkpoint(
             FLAGS.train_dir, state_to_save, int(step), keep=100)
         _model.checkpoint =str(step)
+        time.sleep(10)
 
 
 
