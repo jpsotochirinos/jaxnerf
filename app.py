@@ -9,6 +9,7 @@ import subprocess
 import psutil
 import time
 import os
+import requests
 from jaxnerf.nd import dataset
 from jaxnerf.nd import utils
 
@@ -127,11 +128,17 @@ async def check():
     else:
         _status = True
         _model.files_checker = "11111111"
-
+    path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+    path = path.split(':')
+    url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
+    reqq = requests.post(url)
+    print(reqq)
     if(cpu>80 and 
        mem>20 and 
        _status and
-       _model.factor==_model.factor_guess):
+       _model.factor==_model.factor_guess and
+       reqq.status_code == 200
+       ):
         _model.status = "ready2train"
         db.session.merge(_model)
         db.session.commit()
@@ -147,6 +154,7 @@ async def check():
         return  jsonify({
                     "files_checker": _model.files_checker,
                     "files_factor": _model.factor,
+                    "tpu": reqq.status_code,
                     "status":"503",
                     "message": "not enough resources"})
 
@@ -238,8 +246,8 @@ async def basic_train():
         db.session.merge(_model)
         db.session.merge(_tpu)
         db.session.commit()
-        __perf = subprocess.Popen(_perf)
-        print(__perf.pid)
+        #__perf = subprocess.Popen(_perf)
+        #print(__perf.pid)
         return  jsonify({"status":"200",
                         "message": "succes"})
     except ValueError:
