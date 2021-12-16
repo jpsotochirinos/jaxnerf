@@ -471,9 +471,10 @@ if __name__ == '__main__':
     if(_tpu is None):
         #try:
         path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-        path = path.split(':')
-        url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
-        reqq = requests.post(url)
+        if(path):
+            path = path.split(':')
+            url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
+            reqq = requests.post(url)
         if(reqq.status_code == 200):
             print(" * TPU node conected " +_tpu.type+" "+_tpu.acelerator)
         else:
