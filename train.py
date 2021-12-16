@@ -130,7 +130,7 @@ def main(unused_argv):
   # hosts.
   model_name = FLAGS.train_dir.split('/')[-1]
   _model = Model.query.filter_by(model=model_name).first()
-  _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+  _tpu = Tpu.query.filter_by(acelerator="v2-8").first()
   _tpu.model = _model.model
   _tpu.pid_model = _model.process
   np.random.seed(20201473 + jax.host_id())

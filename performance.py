@@ -2,7 +2,7 @@ from jaxnerf.db.db import Model, Performance,Tpu, db
 import psutil
 
 db.session.commit()
-_tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+_tpu = Tpu.query.filter_by(acelerator="v2-8").first()
 while _tpu.status:
     db.session.commit()
     procObjList = [procObj for procObj in psutil.process_iter() if int(_tpu.pid_model) == procObj.pid ]
