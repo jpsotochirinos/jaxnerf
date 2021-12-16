@@ -195,7 +195,6 @@ def main(unused_argv):
 
 
   for step, batch in zip(range(init_step, FLAGS.max_steps + 1), pdataset):
-    _train = Train()
     if reset_timer:
       t_loop_start = time.time()
       reset_timer = False
@@ -217,6 +216,7 @@ def main(unused_argv):
       _tpu.type_step='step'
       db.session.merge(_tpu)
       db.session.commit() 
+      _train = Train()
       if step % FLAGS.print_every == 0:
         summary_writer.scalar("train_loss", stats.loss[0], step)
         summary_writer.scalar("train_psnr", stats.psnr[0], step)
@@ -246,6 +246,9 @@ def main(unused_argv):
         _train.weight_l2=f'{stats.weight_l2[0]:0.2e}'
         _train.lr=f'{lr:0.2e}'
         _train.rays_per_sec=f'{rays_per_sec:0.0f}'     
+        _model.trains.append(_train)
+        db.session.merge(_model)
+        db.session.commit() 
 
       if step % FLAGS.save_every == 0:
         _tpu.type_step='checkpoint'
@@ -255,12 +258,14 @@ def main(unused_argv):
         checkpoints.save_checkpoint(
             FLAGS.train_dir, state_to_save, int(step), keep=100)
         _model.checkpoint =str(step)
-
+  
+       
     # Test-set evaluation.
     if FLAGS.render_every > 0 and step % FLAGS.render_every == 0:
       # We reuse the same random number generator from the optimization step
       # here on purpose so that the visualization matches what happened in
       # training.
+      #_train = Train()
       _tpu.type_step='eval'
       db.session.merge(_tpu)
       db.session.commit()
@@ -297,8 +302,10 @@ def main(unused_argv):
         _train.psnr=str(psnr)
         _train.eval_time=f'{eval_time:0.3f}'
         _model.last_test =str(step)
-        
-    _model.trains.append(_train)
+        _model.trains.append(_train)   
+        db.session.merge(_model)
+        db.session.commit()     
+    
     db.session.merge(_model)
     db.session.commit()
 
