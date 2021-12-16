@@ -471,6 +471,17 @@ if __name__ == '__main__':
     _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
     if(_tpu is None):
         #try:
+        accelerator_type ="v2-8"
+        #accelerator_type =requests.get('http://metadata.google.internal/computeMetadata/v1/instance/attributes/accelerator-type',headers={'Metadata-Flavor': 'Google'}).text
+        _tpu  = Tpu(
+                    type="node",
+                    acelerator=accelerator_type,
+                    cores="8",
+                    tpu_mem="64",
+                    mem="0",
+                    cpu="0",
+                    status =False
+            )
         path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
         if(path):
             path = path.split(':')
@@ -482,17 +493,6 @@ if __name__ == '__main__':
                 print(" * TPU node disconected " +_tpu.type+" "+_tpu.acelerator)
         else:
             print(" * TPU no found " +_tpu.type+" "+_tpu.acelerator)
-        accelerator_type ="v3-8"
-        #accelerator_type =requests.get('http://metadata.google.internal/computeMetadata/v1/instance/attributes/accelerator-type',headers={'Metadata-Flavor': 'Google'}).text
-        _tpu  = Tpu(
-                    type="VM",
-                    acelerator=accelerator_type,
-                    cores="8",
-                    tpu_mem="128",
-                    mem="365",
-                    cpu="96",
-                    status =False
-            )
         db.session.add(_tpu)
         db.session.commit()
         print(" * TPU profile created " +_tpu.type+" "+_tpu.acelerator)
