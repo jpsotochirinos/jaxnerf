@@ -1,4 +1,5 @@
 #import jaxnerf.train as train
+from matplotlib.pyplot import broken_barh
 from flask import config
 from flask.config import Config
 from jaxnerf.nd.dataset import DATA_DIR, TRAIN_DIR
@@ -475,10 +476,12 @@ if __name__ == '__main__':
             path = path.split(':')
             url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
             reqq = requests.post(url)
-        if(reqq.status_code == 200):
-            print(" * TPU node conected " +_tpu.type+" "+_tpu.acelerator)
+            if(reqq.status_code == 200):
+                print(" * TPU node conected " +_tpu.type+" "+_tpu.acelerator)
+            else:
+                print(" * TPU node disconected " +_tpu.type+" "+_tpu.acelerator)
         else:
-            print(" * TPU node disconected " +_tpu.type+" "+_tpu.acelerator)
+            print(" * TPU no found " +_tpu.type+" "+_tpu.acelerator)
         accelerator_type ="v3-8"
         #accelerator_type =requests.get('http://metadata.google.internal/computeMetadata/v1/instance/attributes/accelerator-type',headers={'Metadata-Flavor': 'Google'}).text
         _tpu  = Tpu(
