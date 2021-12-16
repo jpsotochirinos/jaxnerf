@@ -461,6 +461,7 @@ async def tpuconn():
         try:
             reqq = requests.post(url)
             return jsonify({"status":reqq.status_code,
+                    "url":url,
                     "message": "tpu conected"})
         except requests.exceptions.ConnectionError:
             return jsonify({"status":500,
