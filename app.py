@@ -465,6 +465,7 @@ async def tpuconn():
                     "message": "tpu conected"})
         except requests.exceptions.ConnectionError:
             return jsonify({"status":500,
+                    "url":url,
                     "message": "tpu disconected"})
     else: 
         return jsonify({"status":404,
