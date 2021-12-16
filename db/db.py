@@ -23,7 +23,7 @@ class Profile(db.Model):
         backref=db.backref('profiles', lazy=True))
    
     def __repr__(self):
-        return '<Profile %r>' % self.rg_model
+        return '<Profile %r>' % self.model
 
 
 class Model(db.Model):
@@ -47,7 +47,7 @@ class Model(db.Model):
     
     
     def __repr__(self):
-        return '<Model %r>' % self.rg_model
+        return '<Model %r>' % self.model
 
 class Train(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,7 +67,7 @@ class Train(db.Model):
 
     
     def __repr__(self):
-        return '<Train %r>' % self.rg_model
+        return '<Train %r>' % self.model
 
 class Eval(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,7 +82,7 @@ class Eval(db.Model):
 
     
     def __repr__(self):
-        return '<Eval %r>' % self.rg_model
+        return '<Eval %r>' % self.model
 
 class Render(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -96,7 +96,7 @@ class Render(db.Model):
 
     
     def __repr__(self):
-        return '<Render %r>' % self.rg_model
+        return '<Render %r>' % self.model
 
 class Tpu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
