@@ -221,10 +221,10 @@ def main(unused_argv):
     # multi-host evaluation, all hosts need to run inference even though we
     # only use host 0 to record results.
     _model.last_step = str(step)
-    _tpu.type_step='step'
-    db.session.merge(_tpu)
-    db.session.commit()
     if jax.host_id() == 0:
+      _tpu.type_step='step'
+      db.session.merge(_tpu)
+      db.session.commit() 
       if step % FLAGS.print_every == 0:
         summary_writer.scalar("train_loss", stats.loss[0], step)
         summary_writer.scalar("train_psnr", stats.psnr[0], step)
@@ -263,11 +263,6 @@ def main(unused_argv):
         checkpoints.save_checkpoint(
             FLAGS.train_dir, state_to_save, int(step), keep=100)
         _model.checkpoint =str(step)
-        time.sleep(10)
-
-
-
-      
     # Test-set evaluation.
     if FLAGS.render_every > 0 and step % FLAGS.render_every == 0:
       # We reuse the same random number generator from the optimization step
