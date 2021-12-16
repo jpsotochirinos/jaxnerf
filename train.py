@@ -34,6 +34,8 @@ from jax import config
 TPU_DRIVER_MODE = 1
 config.FLAGS.jax_xla_backend = "tpu_driver"
 config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+import jax.tools.colab_tpu
+jax.tools.colab_tpu.setup_tpu()
 
 from jax import random
 import jax.numpy as jnp
