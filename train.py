@@ -34,8 +34,6 @@ from jax import config
 TPU_DRIVER_MODE = 1
 config.FLAGS.jax_xla_backend = "tpu_driver"
 config.FLAGS.jax_backend_target = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-import jax.tools.colab_tpu
-jax.tools.colab_tpu.setup_tpu()
 
 from jax import random
 import jax.numpy as jnp
@@ -205,7 +203,6 @@ def main(unused_argv):
 
 
   for step, batch in zip(range(init_step, FLAGS.max_steps + 1), pdataset):
-    _train = Train()
     if reset_timer:
       t_loop_start = time.time()
       reset_timer = False
@@ -227,6 +224,7 @@ def main(unused_argv):
       _tpu.type_step='step'
       db.session.merge(_tpu)
       db.session.commit() 
+      _train = Train()
       if step % FLAGS.print_every == 0:
         summary_writer.scalar("train_loss", stats.loss[0], step)
         summary_writer.scalar("train_psnr", stats.psnr[0], step)
@@ -306,8 +304,10 @@ def main(unused_argv):
         _train.psnr=str(psnr)
         _train.eval_time=f'{eval_time:0.3f}'
         _model.last_test =str(step)
+        _model.trains.append(_train)
+        db.session.merge(_model)
+        db.session.commit()
         
-    _model.trains.append(_train)
     db.session.merge(_model)
     db.session.commit()
 
