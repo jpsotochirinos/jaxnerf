@@ -452,7 +452,22 @@ async def performance_by():
                     "cpu":_cpu,
                     "mem":_men,
                     "message": "median performance"})  
-
+@app.route('/tpuconn/',methods=['POST']) 
+async def tpuconn():
+    path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
+    if(path):
+        path = path.split(':')
+        url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
+        try:
+            reqq = requests.post(url)
+            return jsonify({"status":reqq.status_code,
+                    "message": "tpu conected"})
+        except requests.exceptions.ConnectionError:
+            return jsonify({"status":reqq.status_code,
+                    "message": "tpu disconected"})
+    else: 
+        return jsonify({"status":404,
+                    "message": "no cloud tpu endpoinds"})
 
 if __name__ == '__main__':
     if(os.path.exists('tmp_2') and os.path.exists('tmp_2/models')):
@@ -468,7 +483,7 @@ if __name__ == '__main__':
     else:
         print(" * DataBase created")
         init()
-    _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+    _tpu = Tpu.query.filter_by(acelerator="v2-8").first()
     if(_tpu is None):
         #try:
         accelerator_type ="v2-8"
@@ -482,17 +497,7 @@ if __name__ == '__main__':
                     cpu="0",
                     status =False
             )
-        path = os.getenv('KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS')
-        if(path):
-            path = path.split(':')
-            url = 'http://'+path[1][2:]+':8475/requestversion/tpu_driver_nightly'
-            reqq = requests.post(url)
-            if(reqq.status_code == 200):
-                print(" * TPU node conected " +_tpu.type+" "+_tpu.acelerator)
-            else:
-                print(" * TPU node disconected " +_tpu.type+" "+_tpu.acelerator)
-        else:
-            print(" * TPU no found " +_tpu.type+" "+_tpu.acelerator)
+        
         db.session.add(_tpu)
         db.session.commit()
         print(" * TPU profile created " +_tpu.type+" "+_tpu.acelerator)
