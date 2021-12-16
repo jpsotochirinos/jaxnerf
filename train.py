@@ -309,6 +309,7 @@ def main(unused_argv):
         _model.last_test =str(step)
         _model.trains.append(_train)
         db.session.merge(_model)
+        
         db.session.commit()
         
     db.session.merge(_model)
