@@ -122,7 +122,6 @@ def main(unused_argv):
   # hosts.
   model_name = FLAGS.train_dir.split('/')[-1]
   _model = Model.query.filter_by(model=model_name).first()
-  _train = Train()
   _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
   _tpu.model = _model.model
   _tpu.pid_model = _model.process
@@ -196,6 +195,7 @@ def main(unused_argv):
 
 
   for step, batch in zip(range(init_step, FLAGS.max_steps + 1), pdataset):
+    _train = Train()
     if reset_timer:
       t_loop_start = time.time()
       reset_timer = False
