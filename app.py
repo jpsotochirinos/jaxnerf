@@ -149,7 +149,6 @@ async def check():
         return  jsonify({
                     "files_checker": _model.files_checker,
                     "files_factor": _model.factor,
-                    "tpu": reqq.status_code,
                     "status":"503",
                     "message": "not enough resources"})
 
@@ -204,7 +203,7 @@ async def resize():
 
 @app.route('/train/',methods=['POST'])
 async def basic_train():
-    _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+    _tpu = Tpu.query.filter_by(acelerator="v2-8").first()
     model = request.json['model']
     _model = Model.query.filter_by(model=model).first()
     if(_model is None):
@@ -377,7 +376,7 @@ async def stop():
     if(_model is None):
         return  jsonify({"status":"404",
                     "message": "no found"})
-    _tpu = Tpu.query.filter_by(acelerator="v3-8").first()
+    _tpu = Tpu.query.filter_by(acelerator="v2-8").first()
     _pid = _model.process
     process =[]
     procObjList = [procObj for procObj in psutil.process_iter() if int(_pid) == procObj.pid ]
