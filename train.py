@@ -253,7 +253,10 @@ def main(unused_argv):
         _train.avg_loss=f'{avg_loss:0.4f}'
         _train.weight_l2=f'{stats.weight_l2[0]:0.2e}'
         _train.lr=f'{lr:0.2e}'
-        _train.rays_per_sec=f'{rays_per_sec:0.0f}'     
+        _train.rays_per_sec=f'{rays_per_sec:0.0f}'
+        _model.trains.append(_train)
+        db.session.merge(_model)
+        db.session.commit()     
 
       if step % FLAGS.save_every == 0:
         _tpu.type_step='checkpoint'
