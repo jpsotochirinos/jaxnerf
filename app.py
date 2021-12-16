@@ -314,16 +314,15 @@ def model_train():
         trains =[]
         for _train in _trains:
             aux = {
-                "model":_model.model,
-                "step":_train.last_step,
+                "last_step":_model.last_step,
                 "i_loss":_train.i_loss,
                 "avg_loss":_train.avg_loss,
                 "weight_l2":_train.weight_l2,
                 "lr":_train.lr,
-                "ray_per_sec":_train.rays_per_sec,
-                "cpu_percent":_train.cpu_percent,
-                "mem_percent":_train.mem_percent,
-                "type_step":_train.type_step
+                "rays_per_sec":_train.rays_per_sec,
+                "psnr":_train.psnr,
+                "ssim":_train.ssim,
+                "eval_time":_train.eval_time
             }
             trains.append(aux)
 
